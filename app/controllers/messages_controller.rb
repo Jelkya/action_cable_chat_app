@@ -8,7 +8,10 @@ class MessagesController < ApplicationController
   def create
     message = current_user.messages.build(message_params)
     if message.save
-      ActionCable.server.broadcast 'room_channel', message: render_message(message)
+        ActionCable.server.broadcast 'room_channel', message: render_message(message)
+        message.mentions.each do |mention|
+          ActionCable.server.broadcast "room_channel_user_#{mention.id}", mention: true, mentionner: current_user.username
+        end
     else
         Rails.logger.info "Errors: #{message.errors.full_messages}"
     end
